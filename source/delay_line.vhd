@@ -1,8 +1,8 @@
 -----------------------------
 --! @author Imants Pulkstenis
---! @date 05.03.2020
+--! @date 17.03.2020
 --! @file delay_line.vhd
---! @version A
+--! @version B
 --! @copyright Copyright (c) 2021 Imants Pulkstenis
 --! 
 --! @brief Project name: **Delay line**
@@ -31,18 +31,9 @@
 --!      | CI     | Input     | 1     | Carry cascade input                        |
 --! ```  
 --! -------------------------------------------------------------
---! This is ***Bitfield example**
---! {reg: [
---!     {bits: 7,  name: 'opcode',    attr: 'OP-IMM'},
---!     {bits: 5,  name: 'rd',        attr: 'dest'},
---!     {bits: 3,  name: 'func3',     attr: ['ADDI', 'SLTI', 'SLTIU', 'ANDI', 'ORI', 'XORI'], type: 4},
---!     {bits: 5,  name: 'rs1',       attr: 'src'},
---!     {bits: 12, name: 'imm[11:0]', attr: 'I-immediate[11:0]', type: 3}
---! ]}
---! -----------------------------
 --! **Revision:**
 --! A - initial design
---! B - 
+--! B - Long delay line test without D-Flip-Flops
 --! C - 
 --! -----------------------------
 LIBRARY IEEE; --always use this library
@@ -60,11 +51,11 @@ ENTITY delay_line IS
         g_LOCATION : STRING := "SLICE_X1Y1" --! Location of the first CARRY4 block
     );
     PORT (
-        i_clk : IN STD_LOGIC;   --! Main clock for D-Flip-Flops
-        TriggerIn : IN STD_LOGIC;   --! Input of delay line
-        DffOut : OUT STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); --! thermometer time code
-        D : IN STD_LOGIC_VECTOR(3 DOWNTO 0); --! DI for CARRY4 block
-        S : IN STD_LOGIC_VECTOR(3 DOWNTO 0); --! S for CARRY4 block
+        --  i_clk : IN STD_LOGIC;   --! Main clock for D-Flip-Flops
+        TriggerIn : IN STD_LOGIC; --! Input of delay line
+        -- DffOut : OUT STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); -- thermometer time code
+        -- D : IN STD_LOGIC_VECTOR(3 DOWNTO 0); --! DI for CARRY4 block
+        -- S : IN STD_LOGIC_VECTOR(3 DOWNTO 0); --! S for CARRY4 block
         LoopOut : OUT STD_LOGIC --! Output of delay line
         --;
         -- nReset : IN std_logic
@@ -72,11 +63,9 @@ ENTITY delay_line IS
 END delay_line;
 
 --define inside of the module
-ARCHITECTURE arch OF delay_line IS
+ARCHITECTURE rtl OF delay_line IS
     --define components to use
-
-    
-    SIGNAL CO : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0) := (OTHERS => '0'); --! CO vector from CARRY4 block
+    SIGNAL CO : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0) := (OTHERS => '0'); --! CO vector from Carry-out of each stage of the carry chain
 
     -- Preserve the hierarchy of instance CARRY4
     ATTRIBUTE KEEP_HIERARCHY : STRING;
@@ -89,7 +78,7 @@ ARCHITECTURE arch OF delay_line IS
     ATTRIBUTE LOC OF CARRY4_first : LABEL IS g_LOCATION;
 
     ATTRIBUTE keep : STRING;
-    ATTRIBUTE keep OF i_clk : SIGNAL IS "true";
+    -- ATTRIBUTE keep OF i_clk : SIGNAL IS "true";
     ATTRIBUTE keep OF TriggerIn : SIGNAL IS "true";
 BEGIN
 
@@ -102,8 +91,8 @@ BEGIN
         -- O => O, -- 4-bit carry chain XOR data out
         CI => '0', -- 1-bit carry cascade input 
         CYINIT => TriggerIn, -- 1-bit carry initialization
-        DI => D, -- 4-bit carry-MUX data in
-        S => S -- 4-bit carry-MUX select input
+        DI => "0000", -- 4-bit carry-MUX data in
+        S => "1111" -- 4-bit carry-MUX select input
     );
     CARRY4_gen : FOR I IN 1 TO (g_DL_ELEMENT_COUNT/4) - 2 GENERATE CARRY4_inst_next : COMPONENT CARRY4
         PORT MAP(
@@ -111,20 +100,20 @@ BEGIN
             -- O => O, -- 4-bit carry chain XOR data out
             CI => CO(I * 4 - 1), -- 1-bit carry cascade input 
             CYINIT => '0', -- 1-bit carry initialization
-            DI => D, -- 4-bit carry-MUX data in
-            S => S -- 4-bit carry-MUX select input
+            DI => "0000", -- 4-bit carry-MUX data in
+            S => "1111" -- 4-bit carry-MUX select input
         );
     END GENERATE;
-
+    --! CARRY4: Fast Carry Logic Component
     CARRY4_last : CARRY4 PORT MAP(
         CO => CO(g_DL_ELEMENT_COUNT - 1 DOWNTO g_DL_ELEMENT_COUNT - 4), -- 4-bit carry out
         -- O => O, -- 4-bit carry chain XOR data out
         CI => CO(g_DL_ELEMENT_COUNT - 4 - 1), -- 1-bit carry cascade input 
         CYINIT => '0', -- 1-bit carry initialization
-        DI => D, -- 4-bit carry-MUX data in
-        S => S -- 4-bit carry-MUX select input
+        DI => "0000", -- 4-bit carry-MUX data in
+        S => "1111" -- 4-bit carry-MUX select input
     );
-    --End_of_CARRY4_inst instantiation
+    -- End_of_CARRY4_inst instantiation
     ---------------------------------------------------------------------------
 
     ---------------------------------------------------------------------------
@@ -132,18 +121,18 @@ BEGIN
     --! Clock Enable (pos_edge clk).
     --! 7 Series
     --! Xilinx HDL Libraries Guide, version 2012.2
-    FDRE_gen : FOR I IN 0 TO g_DL_ELEMENT_COUNT - 1 GENERATE FDRE_inst : COMPONENT FDRE
-        PORT MAP(
-            Q => DffOut(I), -- Data output
-            C => i_clk, -- Clock input
-            CE => '1', -- Clock enable input
-            R => '0', -- Synchronous reset input
-            D => CO(I) -- Data input
-        );
-    END GENERATE;
+    -- FDRE_gen : FOR I IN 0 TO g_DL_ELEMENT_COUNT - 1 GENERATE FDRE_inst : COMPONENT FDRE
+    --     PORT MAP(
+    --         Q => DffOut(I), -- Data output
+    --         C => i_clk, -- Clock input
+    --         CE => '1', -- Clock enable input
+    --         R => '0', -- Synchronous reset input
+    --         D => CO(I) -- Data input
+    --     );
+    -- END GENERATE;
     -- End of FDRE_inst instantiation
     --------------------------------------------------------------------------------
 
-    LoopOut <= CO(g_DL_ELEMENT_COUNT - 1); -- last element of delay line
+    LoopOut <= CO(g_DL_ELEMENT_COUNT - 1); --! last element of delay line
 
-END arch;
+END rtl;

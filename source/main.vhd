@@ -1,25 +1,19 @@
 -----------------------------
 --! @author Imants Pulkstenis 
---! @date 05.03.2020 
+--! @date 17.03.2020 
 --! @file main.vhd
---! @version A
+--! @version B
 --! @copyright Copyright (c) 2021 Imants Pulkstenis
 --! 
 --! @brief *Project name:* Delay line 
 --! *Module name:* Delay line TOP entity
 --! 
 --! @details *Detailed description*:
+--! Tis is very long CARRY4 delay line for delay testing on oscilloscope.
 --! **Revision:**
 --! A - initial design  
---! B -  
-
------------------------------
---! ***Wavedrom*** example(not actual waveform):
---! { signal: [
---!   { name: "i_clk", wave: 'p.......' },
---!   { name: "o_led", wave: "x.==.=x.", data: ["0x01", "0x02", "0x03", "0x04"] },
---! ]}
------------------------------
+--! B - this version are for delay line testing
+--! C - 
 
 LIBRARY IEEE; --always use this library
 USE IEEE.std_logic_unsigned.ALL; --extends the std_logic_arith library
@@ -29,44 +23,23 @@ USE IEEE.std_logic_1164.ALL; --always use this library
 
 ENTITY main IS
     GENERIC (
-        g_DL_ELEMENT_COUNT : INTEGER := 2 * 4 --! delay element count in delay line. It must be n*4.
+        g_DL_ELEMENT_COUNT : INTEGER := 150 * 4 --! delay element count in delay line. It must be n*4.
     );
     PORT (
-        -- --Hardware on Basys 3 development board
+        -- -- Hardware on Basys 3 development board
         i_clk : IN STD_LOGIC; --! 100MHz clock
-        i_event : IN STD_LOGIC; --! Event signal that is routed through delay line
-        o_clock : OUT STD_LOGIC; --! In FPGA generated test signal that is connected with i_event - for testing
-        -- btnC : IN std_logic; -- push button
-        -- RsRx : IN std_logic; -- UART RX Data
-        -- RsTx : OUT std_logic; -- UART TX Data
-        o_led : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) --! LEDs on Basys3 development board
-        -- sw : IN std_logic_vector(3 DOWNTO 0)
+        o_clock : OUT STD_LOGIC; --! In FPGA (PLL) generated test signal that is connected to output pin without delay
+        o_delay_clock : OUT STD_LOGIC --! In FPGA generated test signal that is driven through delay line and then to output pin for comparison with not delayed clock
     );
 END main; --! Delay line TOP entity
 
-ARCHITECTURE arch OF main IS
+ARCHITECTURE rtl OF main IS
 
-    -- COMPONENT clk_wiz_0
-    --     PORT (
-    --         -- Clock out ports
-    --         o_clk10 : OUT STD_LOGIC;
-    --         o_clk100 : OUT STD_LOGIC;
-    --         -- Clock in ports
-    --         i_clk1 : IN STD_LOGIC
-    --     );
-    -- END COMPONENT;
-
-    SIGNAL w_thermometer : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); --! thermometer time code from primary delay line
-    -- SIGNAL w_thermometer_sec : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); --! thermometer time code from secondary delay line
-    SIGNAL w_hit_detected : STD_LOGIC; --! Hit detected signal
-    SIGNAL w_counter : STD_LOGIC_VECTOR(15 DOWNTO 0); --! Output from hit counter
     SIGNAL w_clk10 : STD_LOGIC; --! 10MHz clock for testing delay loop
     SIGNAL w_clk100 : STD_LOGIC; --! 100MHz main clock 
+    SIGNAL w_delay_0 : STD_LOGIC; --! output of delay line No.0 
+    SIGNAL w_delay_1 : STD_LOGIC; --! output of delay line No.1 
     ATTRIBUTE keep : STRING;
-    ATTRIBUTE keep OF w_thermometer : SIGNAL IS "true";
-    ATTRIBUTE keep OF i_event : SIGNAL IS "true";
-    ATTRIBUTE keep OF w_hit_detected : SIGNAL IS "true";
-    ATTRIBUTE keep OF w_counter : SIGNAL IS "true";
     ATTRIBUTE keep OF w_clk10 : SIGNAL IS "true";
     ATTRIBUTE keep OF w_clk100 : SIGNAL IS "true";
 
@@ -79,63 +52,36 @@ BEGIN
     clk_wiz_instance : ENTITY work.clk_wiz_0
         PORT MAP(
             -- Clock out ports  
-            o_clk10 => w_clk10, -- Clock out ports 
-            o_clk100 => w_clk100, -- Clock out ports 
+            o_clk10 => w_clk10, --! Clock out ports 
+            o_clk100 => w_clk100, --! Clock out ports 
             -- Clock in ports
-            i_clk1 => i_clk-- Clock in ports 
+            i_clk1 => i_clk --! Clock in ports 
         );
 
-    --! primary delay line
+    --! delay line No.0
     --! 
-    delay_line_inst_main : ENTITY work.delay_line
+    delay_line_inst_0 : ENTITY work.delay_line
         GENERIC MAP(
             g_DL_ELEMENT_COUNT => g_DL_ELEMENT_COUNT,
             g_LOCATION => "SLICE_X0Y0"
         )
         PORT MAP(
-            i_clk => w_clk100,
-            TriggerIn => i_event,
-            DffOut => w_thermometer, -- thermometer time code
-            D => "0000", -- DI for CARRY4 block
-            S => "1111"--, -- S for CARRY4 block
-            -- LoopOut =>  ,
-            -- nReset =>   
-        );
-    -- --! secondary delay line
-    -- --! 
-    -- delay_line_inst_sec : ENTITY work.delay_line
-    --     GENERIC MAP(
-    --         g_DL_ELEMENT_COUNT => g_DL_ELEMENT_COUNT,
-    --         g_LOCATION => "SLICE_X1Y0"
-    --     )
-    --     PORT MAP(
-    --         i_clk => i_clk,
-    --         TriggerIn => i_event,
-    --         DffOut => w_thermometer_sec, -- thermometer time code
-    --         D => "0000", -- DI for CARRY4 block
-    --         S => "1111"--, -- S for CARRY4 block
-    --         -- LoopOut =>  ,
-    --         -- nReset =>   
-    --     );
-
-    --! Hit detector entity
-    --!
-    hit_detector_inst : ENTITY work.hit_detector
-        PORT MAP(
-            i_clk => w_clk100, --! Main clock
-            i_first_delay => w_thermometer(0), --!  Trigger form first element of delay line
-            i_last_delay => w_thermometer(g_DL_ELEMENT_COUNT - 1), --!  Trigger form first element of delay line
-            i_enable => '1'--, --! Enable hit detector logic
-   --         o_hit_detected => w_hit_detected--! HIGH when hit is detected
+            TriggerIn => w_clk10, --! Input of delay line
+            LoopOut => w_delay_0
         );
 
-    --! Hit counter entity
-    counter_inst : ENTITY work.counter
+    --! delay line No.1
+    --! 
+    delay_line_inst_1 : ENTITY work.delay_line
+        GENERIC MAP(
+            g_DL_ELEMENT_COUNT => g_DL_ELEMENT_COUNT,
+            g_LOCATION => "SLICE_X1Y0"
+        )
         PORT MAP(
-            i_clk => w_clk100,
-            i_hit_detected => w_hit_detected,
-            o_counter => w_counter
+            TriggerIn => w_delay_0, --! Input of delay line
+            LoopOut => w_delay_1 --! Output of delay line 
         );
+
     ---------------------------------------------------------    
     --                   reg-state logic                   --
     ---------------------------------------------------------
@@ -148,23 +94,6 @@ BEGIN
     --                       outputs                       --
     --------------------------------------------------------- 
 
-    -- This process controls LEDs on the board 
-    -- led_control : PROCESS (w_thermometer, w_thermometer_sec)
-    -- BEGIN
-    --     o_led(15 DOWNTO 0) <= (OTHERS => '0'); -- set all LEDs in OFF state
-    --     -- define LED output
-    --     o_led(15) <= w_thermometer(g_dl_element_count - 1);
-    --     o_led(14) <= w_thermometer_sec(g_dl_element_count - 1);
-    -- END PROCESS;
-
-    -- -- IOBUF: Single-ended Bi-directional Buffer
-    -- io_buffer_inst : ENTITY work.io_buffer
-    -- PORT MAP(
-    --     i => w_clk10,
-    --     o => w_hit_detected,
-    --     io => o_led(15)
-    -- );
-
-    o_led <= w_counter;
     o_clock <= w_clk10;
-END arch;
+    o_delay_clock <= w_delay_1;
+END rtl;
