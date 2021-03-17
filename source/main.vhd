@@ -1,16 +1,18 @@
 -----------------------------
---! Author: Imants Pulkstenis
---! Date: 05.03.2020
---! Project name: Delay line 
---! Module name: Delay line TOP entity
---!
---! Detailed module description:
+--! @author Imants Pulkstenis 
+--! @date 05.03.2020 
+--! @file main.vhd
+--! @version A
+--! @copyright Copyright (c) 2021 Imants Pulkstenis
 --! 
---!
---! Revision:
---! A - initial design
---! B - 
---!
+--! @brief *Project name:* Delay line 
+--! *Module name:* Delay line TOP entity
+--! 
+--! @details *Detailed description*:
+--! **Revision:**
+--! A - initial design  
+--! B -  
+
 -----------------------------
 --! ***Wavedrom*** example(not actual waveform):
 --! { signal: [
@@ -75,13 +77,13 @@ BEGIN
 
     --! PLL clock generator for test purposes
     clk_wiz_instance : clk_wiz_0
-   port map ( 
-  -- Clock out ports  
-   o_clk10 => w_clk10, -- Clock out ports 
-   o_clk100 => w_clk100,-- Clock out ports 
-   -- Clock in ports
-   i_clk1 => i_clk-- Clock in ports 
- );
+    PORT MAP(
+        -- Clock out ports  
+        o_clk10 => w_clk10, -- Clock out ports 
+        o_clk100 => w_clk100, -- Clock out ports 
+        -- Clock in ports
+        i_clk1 => i_clk-- Clock in ports 
+    );
 
     --! primary delay line
     --! 
@@ -99,7 +101,6 @@ BEGIN
             -- LoopOut =>  ,
             -- nReset =>   
         );
-
     -- --! secondary delay line
     -- --! 
     -- delay_line_inst_sec : ENTITY work.delay_line

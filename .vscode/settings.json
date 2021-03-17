@@ -4,14 +4,17 @@
         "CYINIT",
         "FDRE",
         "LEDs",
+        "LUTs",
         "MUXes",
         "RDCLK",
         "UNISIM",
         "VLNV",
         "WRCLK",
         "Wavedrom",
+        "XORs",
         "defaultlib",
         "dout",
+        "subtractors",
         "vcomponents"
     ],
 }

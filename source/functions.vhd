@@ -1,8 +1,14 @@
 -----------------------------
---! Author - Rihards Novickis
---! Date - 30.09.2020 
---! Project name -  
---! Module name - Calculate LOG2
+--! @author  Rihards Novickis
+--! @date - 30.09.2020 
+--! @brief Project name -  Generic function
+--! @file functions.vhd
+--! @version A
+--! @details Module name - Calculate LOG2
+--! Function usage:
+--!         log2c(MAX_VALUE + 1)
+--! Example:
+--!         led_out : OUT std_logic_vector(log2c(MAX_VALUE + 1) - 1 DOWNTO 0);
 --!
 --! Revision:
 --! A - initial design

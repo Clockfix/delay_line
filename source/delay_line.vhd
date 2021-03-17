@@ -1,20 +1,50 @@
 -----------------------------
---! Author Imants Pulkstenis
---! Date 05.03.2020
---! Project name: Delay line
---! Module name: Delay line module 
---!
---! Detailed module description:
---! Xilinx 7 series delay line module. Its length can be configurable from the top module.
---! The Delay line consists of MUXes and D flip Flops at the output.
+--! @author Imants Pulkstenis
+--! @date 05.03.2020
+--! @file delay_line.vhd
+--! @version A
+--! @copyright Copyright (c) 2021 Imants Pulkstenis
 --! 
---!
---! Revision:
+--! @brief Project name: **Delay line**
+--! Module name: **Delay line module** 
+--! 
+--! @details Delay line module for Xilinx 7 series. Its length can be configurable from the top module.
+--! The Delay line consists of MUXes(CARRY4 primitives) and D flip Flops at the output.
+--! -------------------------------------------------------------
+--! ***CARRY4*** (description from *Xilinx 7 Series FPGA Libraries Guide for HDL Designs*)
+--! Primitive: Fast Carry Logic with Look Ahead
+--!     **Introduction**
+--! This circuit design represents the fast carry logic for a slice. The carry chain consists of a series of four MUXes
+--! and four XORs that connect to the other logic (LUTs) in the slice via dedicated routes to form more complex
+--! functions. The fast carry logic is useful for building arithmetic functions like adders, counters, subtractors and
+--! add/subs, as well as such other logic functions as wide comparators, address decoders, and some logic gates
+--! (specifically, AND and OR).
+--!    **Port Descriptions**
+--! ```
+--!      |  Port  | Direction | Width |                  Function                  |
+--!      | ------ | --------- | ----- | ------------------------------------------ |
+--!      | O      | Output    | 4     | Carry chain XOR general data out           |
+--!      | CO     | Output    | 4     | Carry-out of each stage of the carry chain |
+--!      | DI     | Input     | 4     | Carry-MUX data input                       |
+--!      | S      | Input     | 4     | Carry-MUX select line                      |
+--!      | CYINIT | Input     | 1     | Carry-in initialization input              |
+--!      | CI     | Input     | 1     | Carry cascade input                        |
+--! ```  
+--! -------------------------------------------------------------
+--! This is ***Bitfield example**
+--! {reg: [
+--!     {bits: 7,  name: 'opcode',    attr: 'OP-IMM'},
+--!     {bits: 5,  name: 'rd',        attr: 'dest'},
+--!     {bits: 3,  name: 'func3',     attr: ['ADDI', 'SLTI', 'SLTIU', 'ANDI', 'ORI', 'XORI'], type: 4},
+--!     {bits: 5,  name: 'rs1',       attr: 'src'},
+--!     {bits: 12, name: 'imm[11:0]', attr: 'I-immediate[11:0]', type: 3}
+--! ]}
+--! -----------------------------
+--! **Revision:**
 --! A - initial design
 --! B - 
 --! C - 
---!
------------------------------
+--! -----------------------------
 LIBRARY IEEE; --always use this library
 USE ieee.std_logic_unsigned.ALL; --extends the std_logic_arith library
 USE ieee.std_logic_arith.ALL; --basic arithmetic operations for representing integers in standard ways
@@ -26,16 +56,17 @@ USE UNISIM.vcomponents.ALL; -- Xilinx primitive
 --define connections to outside
 ENTITY delay_line IS
     GENERIC (
-        g_DL_ELEMENT_COUNT : INTEGER := 16;
-        g_LOCATION : STRING := "SLICE_X1Y1"
+        g_DL_ELEMENT_COUNT : INTEGER := 16; --! Count of delay elements in the module. Four delay elements are in one CARRY4 primitive. The minimal number of CARRY4 blocks are 3, e.i. minimal delay element count are 3*4=12. 
+        g_LOCATION : STRING := "SLICE_X1Y1" --! Location of the first CARRY4 block
     );
     PORT (
-        i_clk : IN STD_LOGIC;
-        TriggerIn : IN STD_LOGIC;
-        DffOut : OUT STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); -- thermometer time code
-        D : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-        S : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-        LoopOut : OUT STD_LOGIC--;
+        i_clk : IN STD_LOGIC;   --! Main clock for D-Flip-Flops
+        TriggerIn : IN STD_LOGIC;   --! Input of delay line
+        DffOut : OUT STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); --! thermometer time code
+        D : IN STD_LOGIC_VECTOR(3 DOWNTO 0); --! DI for CARRY4 block
+        S : IN STD_LOGIC_VECTOR(3 DOWNTO 0); --! S for CARRY4 block
+        LoopOut : OUT STD_LOGIC --! Output of delay line
+        --;
         -- nReset : IN std_logic
     );
 END delay_line;
@@ -44,7 +75,8 @@ END delay_line;
 ARCHITECTURE arch OF delay_line IS
     --define components to use
 
-    SIGNAL CO : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0) := (OTHERS => '0');
+    
+    SIGNAL CO : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0) := (OTHERS => '0'); --! CO vector from CARRY4 block
 
     -- Preserve the hierarchy of instance CARRY4
     ATTRIBUTE KEEP_HIERARCHY : STRING;
@@ -59,12 +91,12 @@ ARCHITECTURE arch OF delay_line IS
     ATTRIBUTE keep : STRING;
     ATTRIBUTE keep OF i_clk : SIGNAL IS "true";
     ATTRIBUTE keep OF TriggerIn : SIGNAL IS "true";
-BEGIN --define the operation of the module!
+BEGIN
 
     --------------------------------------------------------------------------
-    -- CARRY4: Fast Carry Logic Component
-    -- 7 Series
-    -- Xilinx HDL Libraries Guide, version 2012.2 
+    --! CARRY4: Fast Carry Logic Component
+    --! 7 Series
+    --! Xilinx HDL Libraries Guide, version 2012.2 
     CARRY4_first : CARRY4 PORT MAP(
         CO => CO(3 DOWNTO 0), -- 4-bit carry out
         -- O => O, -- 4-bit carry chain XOR data out
@@ -83,6 +115,7 @@ BEGIN --define the operation of the module!
             S => S -- 4-bit carry-MUX select input
         );
     END GENERATE;
+
     CARRY4_last : CARRY4 PORT MAP(
         CO => CO(g_DL_ELEMENT_COUNT - 1 DOWNTO g_DL_ELEMENT_COUNT - 4), -- 4-bit carry out
         -- O => O, -- 4-bit carry chain XOR data out
@@ -95,10 +128,10 @@ BEGIN --define the operation of the module!
     ---------------------------------------------------------------------------
 
     ---------------------------------------------------------------------------
-    -- FDRE: Single Data Rate D Flip-Flop with Synchronous Reset and
-    -- Clock Enable (pos_edge clk).
-    -- 7 Series
-    -- Xilinx HDL Libraries Guide, version 2012.2
+    --! FDRE: Single Data Rate D Flip-Flop with Synchronous Reset and
+    --! Clock Enable (pos_edge clk).
+    --! 7 Series
+    --! Xilinx HDL Libraries Guide, version 2012.2
     FDRE_gen : FOR I IN 0 TO g_DL_ELEMENT_COUNT - 1 GENERATE FDRE_inst : COMPONENT FDRE
         PORT MAP(
             Q => DffOut(I), -- Data output
