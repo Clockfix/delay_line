@@ -29,7 +29,7 @@ USE IEEE.std_logic_1164.ALL; --always use this library
 
 ENTITY main IS
     GENERIC (
-        g_DL_ELEMENT_COUNT : INTEGER := 100 * 4 --! delay element count in delay line. It must be n*4.
+        g_DL_ELEMENT_COUNT : INTEGER := 2 * 4 --! delay element count in delay line. It must be n*4.
     );
     PORT (
         -- --Hardware on Basys 3 development board
@@ -46,15 +46,15 @@ END main; --! Delay line TOP entity
 
 ARCHITECTURE arch OF main IS
 
-    COMPONENT clk_wiz_0
-        PORT (
-            -- Clock out ports
-            o_clk10 : OUT STD_LOGIC;
-            o_clk100 : OUT STD_LOGIC;
-            -- Clock in ports
-            i_clk1 : IN STD_LOGIC
-        );
-    END COMPONENT;
+    -- COMPONENT clk_wiz_0
+    --     PORT (
+    --         -- Clock out ports
+    --         o_clk10 : OUT STD_LOGIC;
+    --         o_clk100 : OUT STD_LOGIC;
+    --         -- Clock in ports
+    --         i_clk1 : IN STD_LOGIC
+    --     );
+    -- END COMPONENT;
 
     SIGNAL w_thermometer : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); --! thermometer time code from primary delay line
     -- SIGNAL w_thermometer_sec : STD_LOGIC_VECTOR(g_DL_ELEMENT_COUNT - 1 DOWNTO 0); --! thermometer time code from secondary delay line
@@ -76,14 +76,14 @@ BEGIN
     ---------------------------------------------------------
 
     --! PLL clock generator for test purposes
-    clk_wiz_instance : clk_wiz_0
-    PORT MAP(
-        -- Clock out ports  
-        o_clk10 => w_clk10, -- Clock out ports 
-        o_clk100 => w_clk100, -- Clock out ports 
-        -- Clock in ports
-        i_clk1 => i_clk-- Clock in ports 
-    );
+    clk_wiz_instance : ENTITY work.clk_wiz_0
+        PORT MAP(
+            -- Clock out ports  
+            o_clk10 => w_clk10, -- Clock out ports 
+            o_clk100 => w_clk100, -- Clock out ports 
+            -- Clock in ports
+            i_clk1 => i_clk-- Clock in ports 
+        );
 
     --! primary delay line
     --! 
@@ -125,8 +125,8 @@ BEGIN
             i_clk => w_clk100, --! Main clock
             i_first_delay => w_thermometer(0), --!  Trigger form first element of delay line
             i_last_delay => w_thermometer(g_DL_ELEMENT_COUNT - 1), --!  Trigger form first element of delay line
-            i_enable => '1', --! Enable hit detector logic
-            o_hit_detected => w_hit_detected--! HIGH when hit is detected
+            i_enable => '1'--, --! Enable hit detector logic
+   --         o_hit_detected => w_hit_detected--! HIGH when hit is detected
         );
 
     --! Hit counter entity
@@ -148,7 +148,7 @@ BEGIN
     --                       outputs                       --
     --------------------------------------------------------- 
 
-    --! This process controls LEDs on the board 
+    -- This process controls LEDs on the board 
     -- led_control : PROCESS (w_thermometer, w_thermometer_sec)
     -- BEGIN
     --     o_led(15 DOWNTO 0) <= (OTHERS => '0'); -- set all LEDs in OFF state
@@ -156,6 +156,15 @@ BEGIN
     --     o_led(15) <= w_thermometer(g_dl_element_count - 1);
     --     o_led(14) <= w_thermometer_sec(g_dl_element_count - 1);
     -- END PROCESS;
+
+    -- -- IOBUF: Single-ended Bi-directional Buffer
+    -- io_buffer_inst : ENTITY work.io_buffer
+    -- PORT MAP(
+    --     i => w_clk10,
+    --     o => w_hit_detected,
+    --     io => o_led(15)
+    -- );
+
     o_led <= w_counter;
     o_clock <= w_clk10;
 END arch;

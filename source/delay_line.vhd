@@ -56,7 +56,7 @@ USE UNISIM.vcomponents.ALL; -- Xilinx primitive
 --define connections to outside
 ENTITY delay_line IS
     GENERIC (
-        g_DL_ELEMENT_COUNT : INTEGER := 16; --! Count of delay elements in the module. Four delay elements are in one CARRY4 primitive. The minimal number of CARRY4 blocks are 3, e.i. minimal delay element count are 3*4=12. 
+        g_DL_ELEMENT_COUNT : INTEGER := 16; --! Count of delay elements in the module. Four delay elements are in one CARRY4 primitive. The minimal number of CARRY4 blocks are 2, e.i. minimal delay element count are 2*4=8. 
         g_LOCATION : STRING := "SLICE_X1Y1" --! Location of the first CARRY4 block
     );
     PORT (

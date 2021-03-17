@@ -3,6 +3,8 @@
         "Basys",
         "CYINIT",
         "FDRE",
+        "IOBUF",
+        "IOSTANDARD",
         "LEDs",
         "LUTs",
         "MUXes",
