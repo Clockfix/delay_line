@@ -16,6 +16,8 @@
         "XORs",
         "defaultlib",
         "dout",
+        "monostable",
+        "posedge",
         "subtractors",
         "vcomponents"
     ],

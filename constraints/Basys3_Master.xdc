@@ -212,7 +212,7 @@ create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_
 set_property PACKAGE_PIN J3 [get_ports {o_clock}]
 set_property IOSTANDARD LVCMOS33 [get_ports {o_clock}]
 set_property PACKAGE_PIN L3 [get_ports {o_delay_clock}]
-set_property IOSTANDARD LVCMOS33 [get_ports {o_delay_clock}]
+set_property IOSTANDARD LVCMOS33 [get_ports {o_delay_clock}]  
 #set_property PACKAGE_PIN J3 [get_ports {JXADC[0]}]
 #set_property IOSTANDARD LVCMOS33 [get_ports {JXADC[0]}]
 ##Sch name = XA2_P

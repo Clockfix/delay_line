@@ -7,8 +7,8 @@
 ## Diagram
 ![Diagram](delay_line.svg "Diagram")
 ## Description
-Project name: **Delay line**
- Module name: **Delay line module** 
+Project name: Delay line
+ Module name: Delay line module 
 Delay line module for Xilinx 7 series. Its length can be configurable from the top module.
  The Delay line consists of MUXes(CARRY4 primitives) and D flip Flops at the output.
  -------------------------------------------------------------

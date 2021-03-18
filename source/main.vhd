@@ -1,6 +1,6 @@
 -----------------------------
 --! @author Imants Pulkstenis 
---! @date 17.03.2020 
+--! @date 18.03.2021 
 --! @file main.vhd
 --! @version B
 --! @copyright Copyright (c) 2021 Imants Pulkstenis
@@ -23,7 +23,7 @@ USE IEEE.std_logic_1164.ALL; --always use this library
 
 ENTITY main IS
     GENERIC (
-        g_DL_ELEMENT_COUNT : INTEGER := 150 * 4 --! delay element count in delay line. It must be n*4.
+        g_DL_ELEMENT_COUNT : INTEGER := 128 * 4 --! delay element count in delay line. It must be n*4.
     );
     PORT (
         -- -- Hardware on Basys 3 development board
@@ -66,10 +66,15 @@ BEGIN
             g_LOCATION => "SLICE_X0Y0"
         )
         PORT MAP(
-            TriggerIn => w_clk10, --! Input of delay line
-            LoopOut => w_delay_0
+            i_clk => i_clk, --! Main clock for D-Flip-Flops
+            i_trigger_in => w_clk10, --! Input of delay line
+            o_loop_out => w_delay_0, --! Output of delay line
+            --o_dff_q => o_dff_q,
+            i_D => "0000", --! DI for CARRY4 block
+            i_S => "1111", --! S for CARRY4 block
+            i_nReset => '1', --! Synchronous reset input for D-Flip-Flops
+            i_clock_enable => '1' --! Clock enable input for D-Flip-Flops
         );
-
     --! delay line No.1
     --! 
     delay_line_inst_1 : ENTITY work.delay_line
@@ -78,8 +83,14 @@ BEGIN
             g_LOCATION => "SLICE_X1Y0"
         )
         PORT MAP(
-            TriggerIn => w_delay_0, --! Input of delay line
-            LoopOut => w_delay_1 --! Output of delay line 
+            i_clk => i_clk, --! Main clock for D-Flip-Flops
+            i_trigger_in => w_delay_0, --! Input of delay line
+            o_loop_out => w_delay_1, --! Output of delay line
+            --o_dff_q => o_dff_q,
+            i_D => "0000", --! DI for CARRY4 block
+            i_S => "1111", --! S for CARRY4 block
+            i_nReset => '1', --! Synchronous reset input for D-Flip-Flops
+            i_clock_enable => '1' --! Clock enable input for D-Flip-Flops 
         );
 
     ---------------------------------------------------------    
