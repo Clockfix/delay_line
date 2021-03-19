@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "BUFGCE",
         "Basys",
         "CYINIT",
         "FDRE",
@@ -8,6 +9,7 @@
         "LEDs",
         "LUTs",
         "MUXes",
+        "Netlist",
         "RDCLK",
         "UNISIM",
         "VLNV",
@@ -16,6 +18,7 @@
         "XORs",
         "defaultlib",
         "dout",
+        "loopback",
         "monostable",
         "posedge",
         "subtractors",

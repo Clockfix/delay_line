@@ -72,6 +72,9 @@ port
   -- Clock out ports
   o_clk100          : out    std_logic;
   o_clk10          : out    std_logic;
+  -- Status and control signals
+  reset             : in     std_logic;
+  locked            : out    std_logic;
   i_clk1           : in     std_logic
  );
 end component;
@@ -85,6 +88,9 @@ your_instance_name : clk_wiz_0
   -- Clock out ports  
    o_clk100 => o_clk100,
    o_clk10 => o_clk10,
+  -- Status and control signals                
+   reset => reset,
+   locked => locked,
    -- Clock in ports
    i_clk1 => i_clk1
  );
