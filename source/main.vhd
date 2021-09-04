@@ -24,7 +24,7 @@ USE IEEE.std_logic_1164.ALL; --always use this library
 
 ENTITY main IS
     GENERIC (
-        g_DELAY_LINE_COUNT : INTEGER := 4;
+        g_DELAY_LINE_COUNT : INTEGER := 4; --! count of delay lines 
         g_DL_ELEMENT_COUNT : INTEGER := 128 * 4 --! delay element count in delay line. It must be n*4.
     );
     PORT (
@@ -48,6 +48,15 @@ ARCHITECTURE rtl OF main IS
     ATTRIBUTE keep OF w_clk100 : SIGNAL IS "true";
 
 BEGIN
+    ---------------------------------------------------------
+    --                       outputs                       --
+    --------------------------------------------------------- 
+
+    o_clock <= w_clk10;
+    o_clock_loopback <= w_clk10;
+    o_delay_clock <= w_delay_interconnect(g_DELAY_LINE_COUNT - 1);
+    
+    
     ---------------------------------------------------------    
     --             instantiate sub entities                --
     ---------------------------------------------------------
@@ -155,11 +164,5 @@ BEGIN
     --                  next-state logic                   --
     ---------------------------------------------------------
 
-    ---------------------------------------------------------
-    --                       outputs                       --
-    --------------------------------------------------------- 
 
-    o_clock <= w_clk10;
-    o_clock_loopback <= w_clk10;
-    o_delay_clock <= w_delay_interconnect(g_DELAY_LINE_COUNT - 1);
 END rtl;

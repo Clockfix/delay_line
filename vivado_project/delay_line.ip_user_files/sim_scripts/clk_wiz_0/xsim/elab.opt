@@ -1,1 +1,0 @@
---relax --debug typical --mt auto -L work -L unisims_ver -L unimacro_ver -L secureip -L xpm --snapshot clk_wiz_0 work.clk_wiz_0 work.glbl -log elaborate.log
