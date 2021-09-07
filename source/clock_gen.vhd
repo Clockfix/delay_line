@@ -14,7 +14,7 @@
 --! A - initial design  
 --! B - entity form GUI clock wizard changed to MMCME2_BASE Primitive: Base Mixed Mode Clock Manager. 
 --!     The MMCME2 is a mixed signal block designed to support frequency synthesis, clock network deskew, and jitter
---!     Treduction. The clock outputs can each have an individual divide, phase shift and duty cycle based on the same
+--!     reduction. The clock outputs can each have an individual divide, phase shift and duty cycle based on the same
 --!     TVCO frequency. Additionally, the MMCME2 supports dynamic phase shifting and fractional divides.
 --! C - 
 
@@ -28,8 +28,8 @@ ENTITY clock_gen IS
     PORT (
         i_clk : IN STD_LOGIC; --! Main clock input. For Basys3 board it is 100MHz
         o_clock100 : OUT STD_LOGIC; --! In FPGA (PLL) generated clock
-        o_locked : OUT STD_LOGIC --! Clock is locked
-        -- o_clock10 : OUT STD_LOGIC --! In FPGA (PLL) generated clock
+        o_locked : OUT STD_LOGIC; --! Clock is locked
+        o_clock10 : OUT STD_LOGIC --! 10MHz clock output
     );
 END clock_gen; --! Delay line TOP entity
 
@@ -79,6 +79,19 @@ BEGIN
     ); -- End of BUFGCE_inst instantiation
 
 
+    --! BUFGCE: Global Clock Buffer with Clock Enable
+    --! 7 Series
+    --! Xilinx HDL Libraries Guide, version 14.1
+    Global_Clock_Buffer_with_Clock_Enable_clk10 : BUFGCE
+    GENERIC MAP(
+        SIM_DEVICE => "7SERIES" --! To avoid WARNING: [Netlist 29-345] The value of SIM_DEVICE on instance
+    )
+    PORT MAP(
+        O => o_clock10, --! 1-bit output: Clock output
+        CE => w_LOCKED, --! 1-bit input: Clock enable input for I0
+        I => w_CLKOUT1 --! 1-bit input: Primary clock
+    ); -- End of BUFGCE_inst instantiation
+
     ---------------------------------------------------------    
     --             instantiate sub entities                --
     ---------------------------------------------------------
@@ -106,13 +119,13 @@ BEGIN
         CLKIN1_PERIOD => 83.333, -- 12MHz input clock on Cmod 7 board
         -- Input clock period in ns to ps resolution (i.e. 33.333 is 30 MHz).
         -- CLKOUT0_DIVIDE - CLKOUT6_DIVIDE: Divide amount for each CLKOUT (1-128)
-        CLKOUT1_DIVIDE => 1,
+        CLKOUT1_DIVIDE => 75,
         CLKOUT2_DIVIDE => 1,
         CLKOUT3_DIVIDE => 1,
         CLKOUT4_DIVIDE => 1,
         CLKOUT5_DIVIDE => 1,
         CLKOUT6_DIVIDE => 1,
-        CLKOUT0_DIVIDE_F => 7.5, -- Divide amount for CLKOUT0 (1.000-128.000).
+        CLKOUT0_DIVIDE_F => 7.50, -- Divide amount for CLKOUT0 (1.000-128.000).
         -- CLKOUT0_DUTY_CYCLE - CLKOUT6_DUTY_CYCLE: Duty cycle for each CLKOUT (0.01-0.99).
         CLKOUT0_DUTY_CYCLE => 0.5,
         CLKOUT1_DUTY_CYCLE => 0.5,

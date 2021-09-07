@@ -10,6 +10,8 @@
 --! Example:
 --!         led_out : OUT std_logic_vector(log2c(MAX_VALUE + 1) - 1 DOWNTO 0);
 --!
+--! Do not forget add '''work.functions.all''' in VHDL file where function is used
+--! 
 --! Revision:
 --! A - initial design
 --! B - 
@@ -31,7 +33,7 @@ PACKAGE BODY functions IS
         log := 0;
         WHILE (temp > 0) LOOP
             temp := temp/2;
-            log := log + 1;
+            log := log  + 1;
         END LOOP;
         RETURN log;
     END FUNCTION log2c;

@@ -25,8 +25,8 @@
 | ------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | i_clk         | in        | STD_LOGIC |  100MHz clock                                                                                                                 |
 | o_clock       | out       | STD_LOGIC |  In FPGA (PLL) generated test signal that is connected to output pin without delay                                            |
-| o_delay_clock | out       | STD_LOGIC |  In FPGA generated test signal that is driven through delay line and then to output pin for comparison with not delayed clock |
-## Signals, constants and types
+| o_delay_clock | out       | STD_LOGIC |  In FPGA generated test signal that is driven through a delay line and then to output pin for comparison with not delayed clock |
+## Signals, constants, and types
 ### Signals
 | Name      | Type      | Description                         |
 | --------- | --------- | ----------------------------------- |
